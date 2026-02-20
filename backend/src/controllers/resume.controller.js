@@ -21,11 +21,12 @@ const uploadResume = async (req, res) => {
       return res.status(500).json({ message: "Resume upload failed." });
     });
 
-    uploadStream.on("finish", (file) => {
+    uploadStream.on("finish", () => {
+      const fileId = uploadStream.id;
       return res.status(201).json({
-        fileId: file._id,
-        filename: file.filename,
-        url: `/api/v1/resume/${file._id}`,
+        fileId,
+        filename: req.file.originalname,
+        url: `/api/v1/resume/${fileId}`,
       });
     });
 
