@@ -745,7 +745,7 @@ section {
 
 .achievement-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   gap: 0.6rem;
   margin-bottom: 0.6rem;
@@ -757,11 +757,13 @@ section {
   line-height: 1;
   display: inline-flex;
   align-items: center;
+  margin-top: 0.15rem;
 }
 
 .achievement-title {
   font-size: 1.1rem;
   color: var(--text-primary);
+  line-height: 1.3;
 }
 
 .achievement-company {
