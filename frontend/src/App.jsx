@@ -2,9 +2,46 @@ import { useEffect, useMemo, useState } from "react";
 import Admin from "./admin/Admin";
 
 const SCROLL_OFFSET = 70;
+const MONTHS = {
+  january: 0,
+  february: 1,
+  march: 2,
+  april: 3,
+  may: 4,
+  june: 5,
+  july: 6,
+  august: 7,
+  september: 8,
+  october: 9,
+  november: 10,
+  december: 11,
+};
+
+const parseStartDate = (period) => {
+  if (!period) return 0;
+  const [start] = period.split("-").map((part) => part.trim());
+  if (!start) return 0;
+  const parts = start.split(" ").filter(Boolean);
+  if (parts.length === 1) {
+    const yearOnly = Number(parts[0]);
+    return Number.isNaN(yearOnly) ? 0 : new Date(yearOnly, 0, 1).getTime();
+  }
+  const month = MONTHS[parts[0].toLowerCase()];
+  const year = Number(parts[1]);
+  if (month === undefined || Number.isNaN(year)) return 0;
+  return new Date(year, month, 1).getTime();
+};
 
 function App() {
   const isAdminRoute = window.location.pathname.startsWith("/admin");
+  const apiBase = useMemo(() => {
+    const base = import.meta.env.VITE_API_BASE;
+    if (base) return base;
+    const portfolioUrl =
+      import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1/portfolio";
+    return portfolioUrl.replace(/\/portfolio\/?$/, "");
+  }, []);
+  const apiOrigin = useMemo(() => apiBase.replace(/\/api\/v1\/?$/, ""), [apiBase]);
   const [portfolio, setPortfolio] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -18,6 +55,13 @@ function App() {
     () => ["hero", ...(portfolio?.navLinks || []).map((link) => link.id)],
     [portfolio]
   );
+
+  const sortedExperience = useMemo(() => {
+    if (!portfolio?.experience?.items) return [];
+    return [...portfolio.experience.items].sort((a, b) =>
+      parseStartDate(b.period) - parseStartDate(a.period)
+    );
+  }, [portfolio]);
 
   useEffect(() => {
     if (isAdminRoute) {
@@ -158,6 +202,14 @@ function App() {
     );
   }
 
+  const resolveCtaHref = (href, isDownload) => {
+    if (!href || href.startsWith("http")) return href;
+    if (isDownload && href.startsWith("/api/")) {
+      return `${apiOrigin}${href}`;
+    }
+    return href;
+  };
+
   return (
     <>
       <header className="header">
@@ -222,7 +274,7 @@ function App() {
             {portfolio.hero.ctas.map((cta) => (
               <a
                 key={cta.label}
-                href={cta.href}
+                href={resolveCtaHref(cta.href, cta.download)}
                 className={`btn btn-${cta.variant}`}
                 download={cta.download}
                 onClick={(event) => {
@@ -250,7 +302,8 @@ function App() {
               ))}
             </div>
 
-            <div className="education" style={{ display: "flex", gap: "20px" }}>
+            <div className="about-columns">
+              <div className="education">
               <div className="education-timeline">
                 <h3>{portfolio.education.title}</h3>
                 <br />
@@ -261,6 +314,8 @@ function App() {
                     <p className="education-details">{item.details}</p>
                   </div>
                 ))}
+              </div>
+
               </div>
 
               <div className="skills">
@@ -341,7 +396,7 @@ function App() {
         </div>
         <div className="container">
           <div className="timeline">
-            {portfolio.experience.items.map((item) => (
+            {sortedExperience.map((item) => (
               <div key={item.role} className="timeline-item">
                 <div className="timeline-marker"></div>
                 <div className="timeline-content">

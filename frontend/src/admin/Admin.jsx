@@ -45,6 +45,8 @@ function Admin() {
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [resumeStatus, setResumeStatus] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("portfolioAdminUser");
@@ -109,6 +111,7 @@ function Admin() {
     setUser(null);
     setDraft(emptyPortfolio());
     setPortfolioId(null);
+    window.location.assign("/");
   };
 
   const handleSave = async () => {
@@ -140,10 +143,87 @@ function Admin() {
     }
   };
 
+  const handleResumeUpload = async (file) => {
+    if (!file) return;
+    setResumeStatus(null);
+    setError(null);
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${apiBase}/resume`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.message || "Resume upload failed.");
+      }
+
+      const payload = await response.json();
+      const resumeUrl = `${apiBase}/resume/latest`;
+
+      setDraft((prev) => {
+        const hasResumeCta = prev.hero.ctas.some(
+          (cta) =>
+            cta.download ||
+            (cta.label && cta.label.toLowerCase().includes("resume"))
+        );
+
+        const updatedCtas = hasResumeCta
+          ? prev.hero.ctas.map((cta) => {
+              if (
+                cta.download ||
+                (cta.label && cta.label.toLowerCase().includes("resume"))
+              ) {
+                return { ...cta, href: resumeUrl, download: true };
+              }
+              return cta;
+            })
+          : [
+              ...prev.hero.ctas,
+              {
+                label: "Download Resume",
+                href: resumeUrl,
+                variant: "secondary",
+                download: true,
+              },
+            ];
+
+        return {
+          ...prev,
+          hero: {
+            ...prev.hero,
+            ctas: updatedCtas,
+          },
+        };
+      });
+
+      setResumeStatus(
+        `Uploaded ${payload.filename}. Click Save Changes to publish.`
+      );
+    } catch (uploadError) {
+      console.error(uploadError);
+      setResumeStatus(uploadError.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   if (!user) {
     return (
       <div className="admin-page">
         <div className="admin-card">
+          <button
+            type="button"
+            className="btn btn-secondary admin-back"
+            onClick={() => window.location.assign("/")}
+          >
+            Back to site
+          </button>
           <h1>Admin Login</h1>
           <p>Sign in to edit portfolio content.</p>
           {error ? <div className="admin-alert error">{error}</div> : null}
@@ -244,7 +324,7 @@ function Admin() {
       <section className="admin-section">
         <h2>Navigation Links</h2>
         {draft.navLinks.map((link, index) => (
-          <div key={`${link.id}-${index}`} className="admin-row">
+          <div key={`nav-${index}`} className="admin-row">
             <input
               type="text"
               placeholder="id"
@@ -360,9 +440,36 @@ function Admin() {
         </label>
 
         <div className="admin-subsection">
+          <h3>Resume Upload</h3>
+          <div className="admin-row admin-row--upload">
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={(event) => handleResumeUpload(event.target.files?.[0])}
+            />
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={(event) =>
+                event.currentTarget
+                  .closest(".admin-row--upload")
+                  ?.querySelector('input[type="file"]')
+                  ?.click()
+              }
+              disabled={isUploading}
+            >
+              {isUploading ? "Uploading..." : "Choose File"}
+            </button>
+          </div>
+          {resumeStatus ? (
+            <div className="admin-alert">{resumeStatus}</div>
+          ) : null}
+        </div>
+
+        <div className="admin-subsection">
           <h3>CTA Buttons</h3>
           {draft.hero.ctas.map((cta, index) => (
-            <div key={`${cta.label}-${index}`} className="admin-row">
+            <div key={`cta-${index}`} className="admin-row">
               <input
                 type="text"
                 placeholder="label"
@@ -517,7 +624,7 @@ function Admin() {
           </label>
         </div>
         {draft.education.items.map((item, index) => (
-          <div key={`${item.institution}-${index}`} className="admin-card-block">
+          <div key={`edu-${index}`} className="admin-card-block">
             <div className="admin-grid">
               <label>
                 Period
@@ -629,7 +736,7 @@ function Admin() {
           </label>
         </div>
         {draft.skills.categories.map((category, index) => (
-          <div key={`${category.label}-${index}`} className="admin-card-block">
+          <div key={`skill-${index}`} className="admin-card-block">
             <div className="admin-grid">
               <label>
                 Category Label
@@ -741,7 +848,7 @@ function Admin() {
           </label>
         </div>
         {draft.projects.items.map((project, index) => (
-          <div key={`${project.title}-${index}`} className="admin-card-block">
+          <div key={`project-${index}`} className="admin-card-block">
             <div className="admin-grid">
               <label>
                 Title
@@ -908,7 +1015,7 @@ function Admin() {
           </label>
         </div>
         {draft.experience.items.map((item, index) => (
-          <div key={`${item.role}-${index}`} className="admin-card-block">
+          <div key={`exp-${index}`} className="admin-card-block">
             <div className="admin-grid">
               <label>
                 Role
@@ -1057,7 +1164,7 @@ function Admin() {
           </label>
         </div>
         {draft.achievements.items.map((item, index) => (
-          <div key={`${item.title}-${index}`} className="admin-card-block">
+          <div key={`ach-${index}`} className="admin-card-block">
             <div className="admin-grid">
               <label>
                 Icon Class
@@ -1200,7 +1307,7 @@ function Admin() {
           </label>
         </div>
         {draft.contact.items.map((item, index) => (
-          <div key={`${item.label}-${index}`} className="admin-card-block">
+          <div key={`contact-${index}`} className="admin-card-block">
             <div className="admin-grid">
               <label>
                 Label

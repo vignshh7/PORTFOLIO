@@ -30,6 +30,7 @@ app.use(
 //routes import
 import userRouter from "./routes/user.routes.js";
 import portfolioRouter from "./routes/portfolio.routes.js";
+import resumeRouter from "./routes/resume.routes.js";
 
 
 
@@ -38,6 +39,7 @@ import portfolioRouter from "./routes/portfolio.routes.js";
 //http:://localhost:4000/api/v1/users/login
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/portfolio", portfolioRouter)
+app.use("/api/v1/resume", resumeRouter)
 
 
 export default app;

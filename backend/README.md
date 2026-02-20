@@ -24,6 +24,13 @@ PATCH  /api/v1/portfolio/:id    # update by id
 DELETE /api/v1/portfolio/:id    # delete by id
 ```
 
+## Resume Endpoints
+```
+POST   /api/v1/resume           # upload resume (multipart/form-data, field: file)
+GET    /api/v1/resume/latest    # download latest resume
+GET    /api/v1/resume/:id       # download by id
+```
+
 ## Notes
 - Portfolio payload can be sent as `{ "data": { ... } }` or directly as `{ ... }`.
 - The admin UI uses the login endpoint for basic access control.
