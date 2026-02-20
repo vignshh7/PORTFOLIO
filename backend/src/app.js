@@ -24,8 +24,11 @@ app.use(
 			}
 			return callback(new Error("Not allowed by CORS"));
 		},
+		methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+		allowedHeaders: ["Content-Type"],
 	})
 );
+
 
 //routes import
 import userRouter from "./routes/user.routes.js";
