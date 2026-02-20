@@ -8,6 +8,7 @@ app.use(express.json());
 const allowedOrigins = [
 	"http://localhost:5173",
 	"https://portfolio-website-hglyuf5up-vigneshs-projects-ce61276c.vercel.app",
+	"https://vigneshvenkatesan.vercel.app",
 	process.env.FRONTEND_URL,
 ].filter(Boolean);
 
