@@ -29,6 +29,13 @@ app.use(
 	})
 );
 
+app.get("/", (req, res) => {
+	res.status(200).json({
+		status: "ok",
+		message: "Portfolio API is running",
+	});
+});
+
 
 //routes import
 import userRouter from "./routes/user.routes.js";
